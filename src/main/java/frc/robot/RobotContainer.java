@@ -10,13 +10,17 @@ import static frc.robot.Constants.*;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 
+import frc.robot.commands.SwerveDriveToPointCmd;
 import frc.robot.commands.TeleOpDriveCommand;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
@@ -42,7 +46,7 @@ public class RobotContainer {
         // and Y is defined as to the left according to WPILib convention.
         drivetrain.setDefaultCommand(
             // Drivetrain will execute this command periodically
-            new TeleOpDriveCommand(drivetrain, joystick::getLeftX, joystick::getLeftY, () -> -joystick.getRightX())
+            new TeleOpDriveCommand(drivetrain, () -> -joystick.getLeftX(), () -> -joystick.getLeftY(), () -> -joystick.getRightX())
         );
 
         // Idle while the robot is disabled. This ensures the configured
@@ -73,6 +77,8 @@ public class RobotContainer {
     }
 
     public Command getAutonomousCommand() {
-        return Commands.print("No autonomous command configured");
+        CommandSequences.initPoses();
+
+        return CommandSequences.MiddleToH(drivetrain);
     }
 }
