@@ -41,8 +41,8 @@ public class RobotContainer {
         // Note that X is defined as forward according to WPILib convention,
         // and Y is defined as to the left according to WPILib convention.
         drivetrain.setDefaultCommand(
-            // Drivetrain will execute this command periodically
-            new TeleOpDriveCommand(drivetrain, joystick::getLeftX, joystick::getLeftY, () -> -joystick.getRightX())
+                // Drivetrain will execute this command periodically
+                new TeleOpDriveCommand(drivetrain, () -> -joystick.getLeftX(), () -> -joystick.getLeftY(), () -> -joystick.getRightX())
         );
 
         // Idle while the robot is disabled. This ensures the configured
