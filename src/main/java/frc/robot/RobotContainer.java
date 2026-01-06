@@ -13,9 +13,7 @@ import com.ctre.phoenix6.swerve.SwerveRequest;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
+import edu.wpi.first.wpilibj2.command.*;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
@@ -79,6 +77,10 @@ public class RobotContainer {
     public Command getAutonomousCommand() {
         CommandSequences.initPoses();
 
-        return CommandSequences.MiddleToH(drivetrain);
+        return new SequentialCommandGroup(
+                CommandSequences.CageFiveToF(drivetrain),
+                CommandSequences.FToRightPlayer(drivetrain),
+                CommandSequences.RightPlayerToD(drivetrain)
+        );
     }
 }

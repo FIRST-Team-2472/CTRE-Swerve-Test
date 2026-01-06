@@ -3,6 +3,7 @@ package frc.robot;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.commands.SwerveDriveToPointCmd;
+import frc.robot.commands.SwerveFollowTransitionCmd;
 import frc.robot.extras.AutoPose2d;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 
@@ -127,36 +128,36 @@ public class CommandSequences {
 
     //Reef to Source
 
-//    public static Command HToLeftPlayer(CommandSwerveDrivetrain drivetrain){
-//        drivetrain.resetPose(reefNodesMap.get('H').toPose2d());
-//        return new SwerveFollowTransitionCmd(drivetrain, leftReefPassage, leftHumanPlayer, 1);
-//    }
-//
-//    public static Command GToRightPlayer(CommandSwerveDrivetrain drivetrain){
-//        drivetrain.resetPose(reefNodesMap.get('G').toPose2d().toPose2d());
-//        return new SwerveFollowTransitionCmd(drivetrain, rightReefPassage, rightHumanPlayer, 1);
-//    }
-//
-//    public static Command FToRightPlayer(CommandSwerveDrivetrain drivetrain){
-//        //drivetrain.resetPose(reefNodesMap.get('F').toPose2d().toPose2d());
-//        return new SwerveFollowTransitionCmd(drivetrain, rightReefPassage, rightHumanPlayer, 1);
-//    }
-//
-//    public static Command IToLeftPlayer(CommandSwerveDrivetrain drivetrain){
-//        //drivetrain.resetPose(reefNodesMap.get('I').toPose2d().toPose2d());
-//        return new SwerveFollowTransitionCmd(drivetrain, leftReefPassage, leftHumanPlayer, 1);
-//        //return new SwerveDriveToPointCmd(drivetrain, leftHumanPlayer);
-//    }
+    public static Command HToLeftPlayer(CommandSwerveDrivetrain drivetrain){
+        drivetrain.resetPose(reefNodesMap.get('H').toPose2d());
+        return new SwerveFollowTransitionCmd(drivetrain, leftReefPassage.toPose2d(), leftHumanPlayer.toPose2d(), 1);
+    }
+
+    public static Command GToRightPlayer(CommandSwerveDrivetrain drivetrain){
+        drivetrain.resetPose(reefNodesMap.get('G').toPose2d());
+        return new SwerveFollowTransitionCmd(drivetrain, rightReefPassage.toPose2d(), rightHumanPlayer.toPose2d(), 1);
+    }
+
+    public static Command FToRightPlayer(CommandSwerveDrivetrain drivetrain){
+        //drivetrain.resetPose(reefNodesMap.get('F').toPose2d());
+        return new SwerveFollowTransitionCmd(drivetrain, rightReefPassage.toPose2d(), rightHumanPlayer.toPose2d(), 1);
+    }
+
+    public static Command IToLeftPlayer(CommandSwerveDrivetrain drivetrain){
+        //drivetrain.resetPose(reefNodesMap.get('I').toPose2d());
+        return new SwerveFollowTransitionCmd(drivetrain, leftReefPassage.toPose2d(), leftHumanPlayer.toPose2d(), 1);
+        //return new SwerveDriveToPointCmd(drivetrain, leftHumanPlayer.toPose2d());
+    }
 
     //Source to Reef
 
     public static Command RightPlayerToD(CommandSwerveDrivetrain drivetrain){
-        return new SwerveDriveToPointCmd(drivetrain, reefNodesMap.get('D'));
+        return new SwerveDriveToPointCmd(drivetrain, reefNodesMap.get('D').toPose2d());
     }
 
-//    public static Command LeftPlayerToK(CommandSwerveDrivetrain drivetrain){
-//        return new SwerveFollowTransitionCmd(drivetrain, leftReefPassage, reefNodesMap.get('K').toPose2d(), 1);
-//    }
+    public static Command LeftPlayerToK(CommandSwerveDrivetrain drivetrain){
+        return new SwerveFollowTransitionCmd(drivetrain, leftReefPassage.toPose2d(), reefNodesMap.get('K').toPose2d(), 1);
+    }
 
     public static Command RightPlayerToC(CommandSwerveDrivetrain drivetrain){
         return new SwerveDriveToPointCmd(drivetrain, reefNodesMap.get('C').toPose2d());
@@ -168,7 +169,7 @@ public class CommandSequences {
 
     public static Command driveForwardTest(CommandSwerveDrivetrain drivetrain) {
         drivetrain.resetPose(simplePose(1, 0, 0).toPose2d());
-        return new SwerveDriveToPointCmd(drivetrain, simplePose(3, 0, 0));
+        return new SwerveDriveToPointCmd(drivetrain, simplePose(3, 0, 0).toPose2d());
     }
 
     public static AutoPose2d simplePose(double x, double y, double angleDegrees) {

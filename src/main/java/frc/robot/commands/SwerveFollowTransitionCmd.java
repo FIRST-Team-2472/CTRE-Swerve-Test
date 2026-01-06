@@ -9,11 +9,10 @@ import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.MotorPowerController;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 
-import static com.ctre.phoenix6.swerve.SwerveRequest.ForwardPerspectiveValue.OperatorPerspective;
 import static frc.robot.Constants.DriveConstants.K_AUTO_ROTATION_TOLERANCE;
 import static frc.robot.Constants.DriveConstants.K_AUTO_TRANSLATION_TOLERANCE;
 
-public class SwerveDriveToPointCmd extends Command {
+public class SwerveFollowTransitionCmd extends Command {
 
     private final CommandSwerveDrivetrain drivetrain;
     private final SwerveRequest.SwerveDriveBrake brake = new SwerveRequest.SwerveDriveBrake();
@@ -22,15 +21,24 @@ public class SwerveDriveToPointCmd extends Command {
 
     public MotorPowerController speedPowerController;
 
-    private final Pose2d targetPosition;
-    private final Timer timer;
+    Pose2d startPose, endPose, targetPose;
+    Pose2d drivePose;
+    double xTransitionPerFrame, yTransitionPerFrame, angleTransitionPerFrame;
 
-    public SwerveDriveToPointCmd(CommandSwerveDrivetrain drivetrain, Pose2d targetPosition) {
+    Timer timer = new Timer();
+
+    /**
+     * @param drivetrain     the swerve subsystem
+     * @param startPose      PosPose2d of the startPose
+     * @param endPose        the pose to transition to and end at
+     * @param transitionTime the time it should take to fully transition to the end pose
+     */
+    public SwerveFollowTransitionCmd(CommandSwerveDrivetrain drivetrain, Pose2d startPose, Pose2d endPose, double transitionTime) {
+
         this.drivetrain = drivetrain;
-        this.targetPosition = targetPosition;   // targetPosition is not field pose
-                                                // but needs mirroring
-
-        timer = new Timer();
+        this.startPose = startPose;
+        this.endPose = endPose;
+        targetPose = this.startPose;
 
         if (RobotBase.isSimulation()) {
             speedPowerController = new MotorPowerController(0.87, 0.13, .005, 1, .2, 0, 1);
@@ -38,7 +46,11 @@ public class SwerveDriveToPointCmd extends Command {
         }
         // TODO: Find PID values for real Robot
 
-        driveAndTurn.TargetDirection = targetPosition.getRotation();
+        driveAndTurn.TargetDirection = endPose.getRotation();
+
+        xTransitionPerFrame = (endPose.getX() - startPose.getX()) / 50 / transitionTime;// 50 is code refreshes per second
+        yTransitionPerFrame = (endPose.getY() - startPose.getY()) / 50 / transitionTime;
+        angleTransitionPerFrame = endPose.getRotation().minus(startPose.getRotation()).getDegrees() / 50 / transitionTime;
 
         addRequirements(drivetrain);
     }
@@ -67,8 +79,10 @@ public class SwerveDriveToPointCmd extends Command {
 
     @Override
     public void execute() {
+        calculateCurrentPose();
+
         Pose2d botPose = drivetrain.getState().Pose;
-        double[] direction = directionFromPoseAndTarget(botPose, targetPosition);
+        double[] direction = directionFromPoseAndTarget(botPose, drivePose);
 
         double speed = Math.abs(speedPowerController.calculate(0, direction[2]));
 
@@ -79,6 +93,19 @@ public class SwerveDriveToPointCmd extends Command {
                 .withVelocityX(direction[0])
                 .withVelocityY(direction[1])
         );
+    }
+
+    public void calculateCurrentPose() {
+        //if we are at the end pose we will just return
+        //the < .01 is because doubles rarely exactly equal eachother
+        if (Math.abs(targetPose.getX() - endPose.getX()) < .01 && Math.abs(targetPose.getY() - endPose.getY()) < .01 && Math.abs(targetPose.getRotation().minus(endPose.getRotation()).getDegrees()) < .01) {
+            targetPose = endPose;
+            return;
+        }
+
+        //creating a new pose by adding the transition per frame to the old one
+        targetPose = new Pose2d(targetPose.getX() + xTransitionPerFrame, targetPose.getY() + yTransitionPerFrame, Rotation2d.fromDegrees(targetPose.getRotation().getDegrees() + angleTransitionPerFrame));
+        drivePose = targetPose;
     }
 
     @Override
@@ -96,7 +123,7 @@ public class SwerveDriveToPointCmd extends Command {
 
         Pose2d botPose = drivetrain.getState().Pose;
 
-        return getMagnitude(botPose.getX() - targetPosition.getX(), botPose.getY() - targetPosition.getY()) < K_AUTO_TRANSLATION_TOLERANCE
-                && Math.abs(targetPosition.getRotation().minus(botPose.getRotation()).getDegrees()) < K_AUTO_ROTATION_TOLERANCE;
+        return getMagnitude(botPose.getX() - endPose.getX(), botPose.getY() - endPose.getY()) < K_AUTO_TRANSLATION_TOLERANCE
+                && Math.abs(endPose.getRotation().minus(botPose.getRotation()).getDegrees()) < K_AUTO_ROTATION_TOLERANCE;
     }
 }
