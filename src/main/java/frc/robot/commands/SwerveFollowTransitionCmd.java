@@ -11,6 +11,8 @@ import frc.robot.subsystems.CommandSwerveDrivetrain;
 
 import static frc.robot.Constants.DriveConstants.K_AUTO_ROTATION_TOLERANCE;
 import static frc.robot.Constants.DriveConstants.K_AUTO_TRANSLATION_TOLERANCE;
+import static frc.robot.extras.SwerveAutoUtils.directionFromPoseAndTarget;
+import static frc.robot.extras.SwerveAutoUtils.getMagnitude;
 
 public class SwerveFollowTransitionCmd extends Command {
 
@@ -55,23 +57,6 @@ public class SwerveFollowTransitionCmd extends Command {
         addRequirements(drivetrain);
     }
 
-    double getMagnitude(double x, double y) {
-        return Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2));
-    }
-
-    double[] directionFromPoseAndTarget(Pose2d pose, Pose2d target) {
-        double x = target.getX() - pose.getX();
-        double y = target.getY() - pose.getY();
-
-        double magnitude = getMagnitude(x, y);
-
-        // Normalize
-        x /= magnitude;
-        y /= magnitude;
-
-        return new double[]{x, y, magnitude};
-    }
-
     @Override
     public void initialize() {
         timer.restart();
@@ -109,9 +94,7 @@ public class SwerveFollowTransitionCmd extends Command {
     }
 
     @Override
-    public void end(boolean interrupted) {
-        drivetrain.setControl(brake);
-    }
+    public void end(boolean interrupted) {}
 
     @Override
     public boolean isFinished() {
@@ -123,7 +106,16 @@ public class SwerveFollowTransitionCmd extends Command {
 
         Pose2d botPose = drivetrain.getState().Pose;
 
-        return getMagnitude(botPose.getX() - endPose.getX(), botPose.getY() - endPose.getY()) < K_AUTO_TRANSLATION_TOLERANCE
-                && Math.abs(endPose.getRotation().minus(botPose.getRotation()).getDegrees()) < K_AUTO_ROTATION_TOLERANCE;
+        double distance = getMagnitude(botPose.getX() - endPose.getX(), botPose.getY() - endPose.getY());
+        double rotational_error = Math.abs(endPose.getRotation().minus(botPose.getRotation()).getDegrees());
+
+        boolean isThere = distance < K_AUTO_TRANSLATION_TOLERANCE
+                && rotational_error < K_AUTO_ROTATION_TOLERANCE;
+
+        if (isThere) {
+            System.out.printf("%s arrived at position (%.3fm, %.3fm, %.3f°) while being %.3fm and %.3f° off.\n", getName(), botPose.getX(), botPose.getY(), botPose.getRotation().getDegrees(), distance, rotational_error);
+        }
+
+        return isThere;
     }
 }
