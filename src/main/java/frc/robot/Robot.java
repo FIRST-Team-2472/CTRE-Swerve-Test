@@ -7,69 +7,107 @@ package frc.robot;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import org.littletonrobotics.junction.LogFileUtil;
+import org.littletonrobotics.junction.LoggedRobot;
+import org.littletonrobotics.junction.Logger;
+import org.littletonrobotics.junction.networktables.NT4Publisher;
+import org.littletonrobotics.junction.wpilog.WPILOGReader;
+import org.littletonrobotics.junction.wpilog.WPILOGWriter;
 
-public class Robot extends TimedRobot {
-  private Command m_autonomousCommand;
+import java.sql.SQLOutput;
+import java.util.NoSuchElementException;
 
-  private final RobotContainer m_robotContainer;
+public class Robot extends LoggedRobot {
+    private Command m_autonomousCommand;
 
-  public Robot() {
-    m_robotContainer = new RobotContainer();
-  }
+    private final RobotContainer m_robotContainer;
 
-  @Override
-  public void robotPeriodic() {
-    CommandScheduler.getInstance().run(); 
-  }
+    public Robot() {
+        Logger.recordMetadata("ProjectName", "CTRE-Swerve-Test"); // Set a metadata value
 
-  @Override
-  public void disabledInit() {}
+        if (isReal()) {
+            Logger.addDataReceiver(new WPILOGWriter()); // Log to a USB stick ("/U/logs")
+            Logger.addDataReceiver(new NT4Publisher()); // Publish data to NetworkTables
+        } else {
+            try {
+                String logPath = LogFileUtil.findReplayLog(); // Pull the replay log from AdvantageScope (or prompt the user)
+                setUseTiming(false); // Run as fast as possible
+                Logger.setReplaySource(new WPILOGReader(logPath)); // Read replay log
+                Logger.addDataReceiver(new WPILOGWriter(LogFileUtil.addPathSuffix(logPath, "_sim"))); // Save outputs to a new log
+            } catch (NoSuchElementException e) {
+                System.out.println("No log open in AdvantageScope, cannot simulate from log, so a simulation from live data will start.");
+                Logger.addDataReceiver(new NT4Publisher()); // Publish data to NetworkTables
+            }
+        }
 
-  @Override
-  public void disabledPeriodic() {}
+        Logger.start(); // Start logging! No more data receivers, replay sources, or metadata values may be added.
 
-  @Override
-  public void disabledExit() {}
-
-  @Override
-  public void autonomousInit() {
-    m_autonomousCommand = m_robotContainer.getAutonomousCommand();
-
-    if (m_autonomousCommand != null) {
-      m_autonomousCommand.schedule();
+        m_robotContainer = new RobotContainer();
     }
-  }
 
-  @Override
-  public void autonomousPeriodic() {}
-
-  @Override
-  public void autonomousExit() {}
-
-  @Override
-  public void teleopInit() {
-    if (m_autonomousCommand != null) {
-      m_autonomousCommand.cancel();
+    @Override
+    public void robotPeriodic() {
+        CommandScheduler.getInstance().run();
     }
-  }
 
-  @Override
-  public void teleopPeriodic() {}
+    @Override
+    public void disabledInit() {
+    }
 
-  @Override
-  public void teleopExit() {}
+    @Override
+    public void disabledPeriodic() {
+    }
 
-  @Override
-  public void testInit() {
-    CommandScheduler.getInstance().cancelAll();
-  }
+    @Override
+    public void disabledExit() {
+    }
 
-  @Override
-  public void testPeriodic() {}
+    @Override
+    public void autonomousInit() {
+        m_autonomousCommand = m_robotContainer.getAutonomousCommand();
 
-  @Override
-  public void testExit() {}
+        if (m_autonomousCommand != null) {
+            m_autonomousCommand.schedule();
+        }
+    }
 
-  @Override
-  public void simulationPeriodic() {}
+    @Override
+    public void autonomousPeriodic() {
+    }
+
+    @Override
+    public void autonomousExit() {
+    }
+
+    @Override
+    public void teleopInit() {
+        if (m_autonomousCommand != null) {
+            m_autonomousCommand.cancel();
+        }
+    }
+
+    @Override
+    public void teleopPeriodic() {
+    }
+
+    @Override
+    public void teleopExit() {
+    }
+
+    @Override
+    public void testInit() {
+        CommandScheduler.getInstance().cancelAll();
+    }
+
+    @Override
+    public void testPeriodic() {
+    }
+
+    @Override
+    public void testExit() {
+    }
+
+    @Override
+    public void simulationPeriodic() {
+    }
 }

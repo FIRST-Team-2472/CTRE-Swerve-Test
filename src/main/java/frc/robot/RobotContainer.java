@@ -72,10 +72,6 @@ public class RobotContainer {
     public Command getAutonomousCommand() {
         CommandSequences.initPoses();
 
-        return new SequentialCommandGroup(
-                CommandSequences.CageFiveToF(drivetrain),
-                CommandSequences.FToRightPlayer(drivetrain),
-                CommandSequences.RightPlayerToD(drivetrain)
-        );
+        return CommandSequences.driveForwardTest(drivetrain);
     }
 }
