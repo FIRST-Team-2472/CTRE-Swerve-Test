@@ -17,7 +17,6 @@ import static frc.robot.extras.SwerveAutoUtils.getMagnitude;
 public class SwerveFollowTransitionCmd extends Command {
 
     private final CommandSwerveDrivetrain drivetrain;
-    private final SwerveRequest.SwerveDriveBrake brake = new SwerveRequest.SwerveDriveBrake();
     private final SwerveRequest.FieldCentricFacingAngle driveAndTurn = new SwerveRequest.FieldCentricFacingAngle()
             .withForwardPerspective(SwerveRequest.ForwardPerspectiveValue.BlueAlliance); // Don't automatically flip heading based on alliance
 
