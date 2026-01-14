@@ -15,7 +15,7 @@ public class TeleOpDriveCommand extends Command {
 
     private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
             .withDeadband(DriveConstants.K_MAX_SPEED * 0.1).withRotationalDeadband(DriveConstants.K_MAX_ANGULAR_RATE * 0.1) // Add a 10% deadband
-            .withDriveRequestType(SwerveModule.DriveRequestType.OpenLoopVoltage); // Use open-loop control for drive motors
+            .withDriveRequestType(SwerveModule.DriveRequestType.Velocity); // Use open-loop control for drive motors
 
     public TeleOpDriveCommand(CommandSwerveDrivetrain drivetrain, Supplier<Double> inputX, Supplier<Double> inputY, Supplier<Double> inputTheta) {
         this.drivetrain = drivetrain;
