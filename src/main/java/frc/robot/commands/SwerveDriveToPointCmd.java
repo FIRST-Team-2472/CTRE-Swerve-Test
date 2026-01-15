@@ -1,6 +1,7 @@
 package frc.robot.commands;
 
 import com.ctre.phoenix6.swerve.SwerveRequest;
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.RobotBase;
@@ -8,10 +9,10 @@ import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.MotorPowerController;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
+import org.littletonrobotics.junction.Logger;
 
 import static com.ctre.phoenix6.swerve.SwerveRequest.ForwardPerspectiveValue.OperatorPerspective;
-import static frc.robot.Constants.DriveConstants.K_AUTO_ROTATION_TOLERANCE;
-import static frc.robot.Constants.DriveConstants.K_AUTO_TRANSLATION_TOLERANCE;
+import static frc.robot.Constants.DriveConstants.*;
 import static frc.robot.extras.SwerveAutoUtils.directionFromPoseAndTarget;
 import static frc.robot.extras.SwerveAutoUtils.getMagnitude;
 
@@ -21,7 +22,7 @@ public class SwerveDriveToPointCmd extends Command {
     private final SwerveRequest.FieldCentricFacingAngle driveAndTurn = new SwerveRequest.FieldCentricFacingAngle()
             .withForwardPerspective(SwerveRequest.ForwardPerspectiveValue.BlueAlliance); // Don't automatically flip heading based on alliance
 
-    public MotorPowerController speedPowerController;
+    public PIDController speedPowerController;
 
     private final Pose2d targetPosition;
     private final Timer timer;
@@ -34,10 +35,12 @@ public class SwerveDriveToPointCmd extends Command {
         timer = new Timer();
 
         if (RobotBase.isSimulation()) {
-            speedPowerController = new MotorPowerController(0.87, 0.13, .005, 1, .2, 0, 1);
+            speedPowerController = new PIDController(3.0, 0.03, 0.0);
+            driveAndTurn.HeadingController.setPID(4.0, 0.0, 0.0);
+        } else {
+            speedPowerController = new PIDController(0.2, 0.13, .005);
             driveAndTurn.HeadingController.setPID(5.0, 0.0, 0.0);
         }
-        // TODO: Find PID values for real Robot
 
         driveAndTurn.TargetDirection = targetPosition.getRotation();
 
@@ -54,7 +57,11 @@ public class SwerveDriveToPointCmd extends Command {
         Pose2d botPose = drivetrain.getState().Pose;
         double[] direction = directionFromPoseAndTarget(botPose, targetPosition);
 
-        double speed = Math.abs(speedPowerController.calculate(0, direction[2]));
+        double pid = Math.abs(speedPowerController.calculate(0, direction[2]));
+        pid = Math.min(pid, 1.0d);
+        double speed = pid * K_AUTO_SPEED;
+
+        Logger.recordOutput("PID Output", pid);
 
         direction[0] *= speed;
         direction[1] *= speed;
