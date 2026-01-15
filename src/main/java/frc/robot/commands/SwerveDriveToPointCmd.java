@@ -9,6 +9,7 @@ import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.MotorPowerController;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
+import org.littletonrobotics.junction.Logger;
 
 import static com.ctre.phoenix6.swerve.SwerveRequest.ForwardPerspectiveValue.OperatorPerspective;
 import static frc.robot.Constants.DriveConstants.*;
@@ -34,8 +35,8 @@ public class SwerveDriveToPointCmd extends Command {
         timer = new Timer();
 
         if (RobotBase.isSimulation()) {
-            speedPowerController = new PIDController(50.0, 0.0, 0.0);
-            driveAndTurn.HeadingController.setPID(6.0, 0.0, 0.0);
+            speedPowerController = new PIDController(3.0, 0.03, 0.0);
+            driveAndTurn.HeadingController.setPID(4.0, 0.0, 0.0);
         } else {
             speedPowerController = new PIDController(0.2, 0.13, .005);
             driveAndTurn.HeadingController.setPID(5.0, 0.0, 0.0);
@@ -56,7 +57,11 @@ public class SwerveDriveToPointCmd extends Command {
         Pose2d botPose = drivetrain.getState().Pose;
         double[] direction = directionFromPoseAndTarget(botPose, targetPosition);
 
-        double speed = Math.abs(speedPowerController.calculate(0, direction[2])) * K_AUTO_SPEED;
+        double pid = Math.abs(speedPowerController.calculate(0, direction[2]));
+        pid = Math.min(pid, 1.0d);
+        double speed = pid * K_AUTO_SPEED;
+
+        Logger.recordOutput("PID Output", pid);
 
         direction[0] *= speed;
         direction[1] *= speed;
@@ -82,9 +87,6 @@ public class SwerveDriveToPointCmd extends Command {
 
         double distance = getMagnitude(botPose.getX() - targetPosition.getX(), botPose.getY() - targetPosition.getY());
         double rotational_error = Math.abs(targetPosition.getRotation().minus(botPose.getRotation()).getDegrees());
-
-        System.out.printf("rotational error %.3f\n", rotational_error);
-        System.out.printf("positional error %.3f\n", distance);
 
         boolean isThere = distance < K_AUTO_TRANSLATION_TOLERANCE
                 && rotational_error < K_AUTO_ROTATION_TOLERANCE;
