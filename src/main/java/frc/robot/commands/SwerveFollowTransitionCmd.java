@@ -9,6 +9,7 @@ import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.MotorPowerController;
+import frc.robot.extras.DerivativeLimiter;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import org.littletonrobotics.junction.Logger;
 
@@ -24,6 +25,8 @@ public class SwerveFollowTransitionCmd extends Command {
 
     public PIDController speedPowerController;
     public PIDController turningPowerController;
+    public DerivativeLimiter speedDerivLimiter = new DerivativeLimiter(0.2);
+    public DerivativeLimiter turningDerivLimiter = new DerivativeLimiter(0.2);
 
     Pose2d startPose, endPose, targetPose;
     Pose2d drivePose;
@@ -76,12 +79,18 @@ public class SwerveFollowTransitionCmd extends Command {
         movementPID = Math.min(movementPID, 1.0d);
         double movementSpeed = movementPID * K_AUTO_SPEED;
 
+        // Limit Acceleration
+        movementSpeed = speedDerivLimiter.limit(movementSpeed);
+
         double turningPID = turningPowerController.calculate(botPose.getRotation().getRadians(), drivePose.getRotation().getRadians());
         turningPID = Math.max(Math.min(turningPID, 1.0d), -1.0);
         double turningSpeed = turningPID * K_MAX_ANGULAR_RATE;
 
-        Logger.recordOutput("Movement PID Output", movementPID);
-        Logger.recordOutput("Turning PID Output", turningPID);
+        // Limit Acceleration
+        turningSpeed = turningDerivLimiter.limit(turningSpeed);
+
+        Logger.recordOutput("Movement Speed", movementSpeed);
+        Logger.recordOutput("Turning Speed", turningSpeed);
 
         direction[0] *= movementSpeed;
         direction[1] *= movementSpeed;

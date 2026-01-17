@@ -8,6 +8,7 @@ import static frc.robot.Constants.*;
 
 import com.ctre.phoenix6.swerve.SwerveRequest;
 
+import com.pathplanner.lib.commands.PathPlannerAuto;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj2.command.*;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
