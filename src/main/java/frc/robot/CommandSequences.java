@@ -168,8 +168,8 @@ public class CommandSequences {
     }
 
     public static Command driveForwardTest(CommandSwerveDrivetrain drivetrain) {
-        drivetrain.resetPose(simplePose(1, 0, 0).toPose2d());
-        return new SwerveDriveToPointCmd(drivetrain, simplePose(3, 0, 0).toPose2d());
+        drivetrain.resetPose(simplePose(1, 0, 180).toPose2d());
+        return new SwerveDriveToPointCmd(drivetrain, simplePose(6, 0, 180).toPose2d());
     }
 
     public static AutoPose2d simplePose(double x, double y, double angleDegrees) {

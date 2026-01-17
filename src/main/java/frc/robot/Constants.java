@@ -10,13 +10,13 @@ public class Constants {
     }
 
     public static class DriveConstants {
-        public static final double K_MAX_SPEED = 2.0; // m/s
-        public static final double K_AUTO_SPEED = K_MAX_SPEED * 0.8;
-        public static final double K_MAX_ANGULAR_RATE = RotationsPerSecond.of(0.75).in(RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
+        public static final double K_MAX_SPEED = 1.75; // m/s
+        public static final double K_AUTO_SPEED = K_MAX_SPEED * 0.5;
+        public static final double K_MAX_ANGULAR_RATE = RotationsPerSecond.of(0.5).in(RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
 
         // TODO: Find reasonable tolerances with physical robot
-        public static final double K_AUTO_TRANSLATION_TOLERANCE = 0.005; // in meters
-        public static final double K_AUTO_ROTATION_TOLERANCE = 0.05; // in degrees
+        public static final double K_AUTO_TRANSLATION_TOLERANCE = 0.01; // in meters
+        public static final double K_AUTO_ROTATION_TOLERANCE = 0.1; // in degrees
     }
 
     public static class FieldConstants {

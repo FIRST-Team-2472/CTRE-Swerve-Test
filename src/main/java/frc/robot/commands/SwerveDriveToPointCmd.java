@@ -1,5 +1,6 @@
 package frc.robot.commands;
 
+import com.ctre.phoenix6.swerve.SwerveModule;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -19,10 +20,11 @@ import static frc.robot.extras.SwerveAutoUtils.getMagnitude;
 public class SwerveDriveToPointCmd extends Command {
 
     private final CommandSwerveDrivetrain drivetrain;
-    private final SwerveRequest.FieldCentricFacingAngle driveAndTurn = new SwerveRequest.FieldCentricFacingAngle()
+    private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric().withDriveRequestType(SwerveModule.DriveRequestType.Velocity)
             .withForwardPerspective(SwerveRequest.ForwardPerspectiveValue.BlueAlliance); // Don't automatically flip heading based on alliance
 
     public PIDController speedPowerController;
+    public PIDController turningPowerController;
 
     private final Pose2d targetPosition;
     private final Timer timer;
@@ -35,14 +37,13 @@ public class SwerveDriveToPointCmd extends Command {
         timer = new Timer();
 
         if (RobotBase.isSimulation()) {
-            speedPowerController = new PIDController(3.0, 0.03, 0.0);
-            driveAndTurn.HeadingController.setPID(4.0, 0.0, 0.0);
+            speedPowerController = new PIDController(3.0, 0.01, 0.0);
+            turningPowerController = new PIDController(1.5, 0.0, 0.0);
         } else {
-            speedPowerController = new PIDController(0.2, 0.13, .005);
-            driveAndTurn.HeadingController.setPID(5.0, 0.0, 0.0);
+            speedPowerController = new PIDController(0.65, 0.005, 0.02
+            );
+            turningPowerController = new PIDController(2.0, 0.0, 0.0);
         }
-
-        driveAndTurn.TargetDirection = targetPosition.getRotation();
 
         addRequirements(drivetrain);
     }
@@ -57,18 +58,24 @@ public class SwerveDriveToPointCmd extends Command {
         Pose2d botPose = drivetrain.getState().Pose;
         double[] direction = directionFromPoseAndTarget(botPose, targetPosition);
 
-        double pid = Math.abs(speedPowerController.calculate(0, direction[2]));
-        pid = Math.min(pid, 1.0d);
-        double speed = pid * K_AUTO_SPEED;
+        double movementPID = Math.abs(speedPowerController.calculate(0, direction[2]));
+        movementPID = Math.min(movementPID, 1.0d);
+        double movementSpeed = movementPID * K_AUTO_SPEED;
 
-        Logger.recordOutput("PID Output", pid);
+        double turningPID = turningPowerController.calculate(botPose.getRotation().getRadians(), targetPosition.getRotation().getRadians());
+        turningPID = Math.max(Math.min(turningPID, 1.0d), -1.0);
+        double turningSpeed = turningPID * K_MAX_ANGULAR_RATE;
 
-        direction[0] *= speed;
-        direction[1] *= speed;
+        Logger.recordOutput("Movement PID Output", movementPID);
+        Logger.recordOutput("Turning PID Output", turningPID);
 
-        drivetrain.setControl(driveAndTurn
+        direction[0] *= movementSpeed;
+        direction[1] *= movementSpeed;
+
+        drivetrain.setControl(drive
                 .withVelocityX(direction[0])
                 .withVelocityY(direction[1])
+                .withRotationalRate(turningSpeed)
         );
     }
 
@@ -79,14 +86,17 @@ public class SwerveDriveToPointCmd extends Command {
     public boolean isFinished() {
 
         // use this function if you override the command to finish it
-        if (timer.hasElapsed(10)) {
-            return true;
-        }
+//        if (timer.hasElapsed(20)) {
+//            return true;
+//        }
 
         Pose2d botPose = drivetrain.getState().Pose;
 
         double distance = getMagnitude(botPose.getX() - targetPosition.getX(), botPose.getY() - targetPosition.getY());
         double rotational_error = Math.abs(targetPosition.getRotation().minus(botPose.getRotation()).getDegrees());
+
+        Logger.recordOutput("Movement Distance", distance);
+        Logger.recordOutput("Turning Distance", rotational_error);
 
         boolean isThere = distance < K_AUTO_TRANSLATION_TOLERANCE
                 && rotational_error < K_AUTO_ROTATION_TOLERANCE;
