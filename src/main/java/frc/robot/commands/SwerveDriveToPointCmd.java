@@ -9,6 +9,7 @@ import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.MotorPowerController;
+import frc.robot.extras.DerivativeLimiter;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import org.littletonrobotics.junction.Logger;
 
@@ -25,9 +26,12 @@ public class SwerveDriveToPointCmd extends Command {
 
     public PIDController speedPowerController;
     public PIDController turningPowerController;
+    
 
     private final Pose2d targetPosition;
     private final Timer timer;
+    private final DerivativeLimiter speedLimiter = new DerivativeLimiter(1);
+    private final DerivativeLimiter turningLimiter = new DerivativeLimiter(1);
 
     public SwerveDriveToPointCmd(CommandSwerveDrivetrain drivetrain, Pose2d targetPosition) {
         this.drivetrain = drivetrain;
@@ -60,11 +64,11 @@ public class SwerveDriveToPointCmd extends Command {
 
         double movementPID = Math.abs(speedPowerController.calculate(0, direction[2]));
         movementPID = Math.min(movementPID, 1.0d);
-        double movementSpeed = movementPID * K_AUTO_SPEED;
+        double movementSpeed = speedLimiter.applyLimit(movementPID * K_AUTO_SPEED);
 
         double turningPID = turningPowerController.calculate(botPose.getRotation().getRadians(), targetPosition.getRotation().getRadians());
         turningPID = Math.max(Math.min(turningPID, 1.0d), -1.0);
-        double turningSpeed = turningPID * K_MAX_ANGULAR_RATE;
+        double turningSpeed = turningLimiter.applyLimit(turningPID * K_MAX_ANGULAR_RATE);
 
         Logger.recordOutput("Movement PID Output", movementPID);
         Logger.recordOutput("Turning PID Output", turningPID);
